@@ -1,0 +1,34 @@
+name = "realscan"
+main = "src/index.js"
+compatibility_date = "2026-05-19"
+workers_dev = true
+
+[observability]
+enabled = true
+
+# Custom domain on the monteirotf.com zone (provisions DNS + cert).
+routes = [
+  { pattern = "realscan.monteirotf.com", custom_domain = true }
+]
+
+# Stored reports + aggregate counters, and a per-IP scan rate limiter.
+# SQLite-backed Durable Objects -> eligible on the Workers Free plan.
+[[durable_objects.bindings]]
+name = "REPORTS"
+class_name = "Reports"
+
+[[durable_objects.bindings]]
+name = "SCAN_LIMITER"
+class_name = "ScanLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Reports", "ScanLimiter"]
+
+[vars]
+# Abuse control: a public scanner must not become an attack proxy.
+SCAN_LIMIT = "8"          # scans per window per client IP
+SCAN_WINDOW_MS = "600000" # 10 minutes
+MAX_SCRIPTS = "6"         # first-party scripts fetched for secret scan
+FETCH_TIMEOUT_MS = "8000"
+REPORT_TTL_DAYS = "30"

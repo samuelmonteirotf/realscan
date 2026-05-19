@@ -1,0 +1,16 @@
+{
+  "name": "realscan",
+  "version": "0.1.0",
+  "private": false,
+  "description": "External web posture scanner on Cloudflare Workers — TLS reachability, security headers, SPF/DMARC/DNSSEC, origin-exposure heuristics, and exposed-secret detection. Honest by design: it only reports what a Worker can actually verify.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.90.0"
+  }
+}
