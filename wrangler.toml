@@ -29,7 +29,7 @@ new_sqlite_classes = ["Reports", "ScanLimiter"]
 
 [vars]
 # Abuse control: a public scanner must not become an attack proxy.
-SCAN_LIMIT = "8"          # scans per window per client IP
+SCAN_LIMIT = "20"         # scans per window per client IP (demo-friendly, still abuse-bounded)
 SCAN_WINDOW_MS = "600000" # 10 minutes
 MAX_SCRIPTS = "6"         # first-party scripts fetched for secret scan
 FETCH_TIMEOUT_MS = "8000"

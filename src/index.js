@@ -62,7 +62,11 @@ export default {
     if (url.pathname.startsWith("/r/")) {
       const id = url.pathname.slice(3);
       const r = await reports.fetch("https://do/get?id=" + encodeURIComponent(id));
-      if (!r.ok) return HTML(renderLanding(url.host, "Report not found or expired."));
+      if (!r.ok)
+        return new Response(renderLanding(url.host, "Report not found or expired."), {
+          status: 404,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
       return HTML(renderReport(await r.json(), url.host, id));
     }
 
@@ -76,19 +80,30 @@ export default {
       if (!input || typeof input !== "string")
         return J({ error: "Missing url." }, 400, true);
 
-      // Abuse control before doing any outbound work.
+      // Cheap syntactic check FIRST — a typo'd URL should get a clear
+      // error, not be masked by the rate limiter.
+      let parsed;
+      try {
+        parsed = new URL(/^https?:\/\//i.test(input) ? input : "https://" + input);
+      } catch {
+        return J({ error: "That doesn't look like a valid domain or URL." }, 400, true);
+      }
+      if (!parsed.hostname.includes("."))
+        return J({ error: "Enter a full domain, e.g. example.com." }, 400, true);
+
+      // Abuse control before any outbound work (DoH resolve + scan).
       const ip = request.headers.get("cf-connecting-ip") || "anon";
       const lim = env.SCAN_LIMITER.get(env.SCAN_LIMITER.idFromName(ip));
       const lr = await lim.fetch("https://do/", {
         method: "POST",
         body: JSON.stringify({
-          limit: parseInt(env.SCAN_LIMIT || "8", 10),
+          limit: parseInt(env.SCAN_LIMIT || "20", 10),
           windowMs: parseInt(env.SCAN_WINDOW_MS || "600000", 10),
         }),
       });
       const { limited, retryAfter } = await lr.json();
       if (limited)
-        return J({ error: `Rate limited. Try again in ${retryAfter}s.` }, 429, true);
+        return J({ error: `Rate limited — try again in ${retryAfter}s. Scans are expensive; this protects the sites being scanned.` }, 429, true);
 
       const v = await validateTarget(input);
       if (!v.ok) return J({ error: v.error }, 400, true);
