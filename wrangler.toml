@@ -3,13 +3,15 @@ main = "src/index.js"
 compatibility_date = "2026-05-19"
 workers_dev = true
 
-[observability]
-enabled = true
-
 # Custom domain on the monteirotf.com zone (provisions DNS + cert).
+# Must stay ABOVE any [table] header — a bare key after [observability]
+# would be parsed as observability.routes and silently ignored.
 routes = [
   { pattern = "realscan.monteirotf.com", custom_domain = true }
 ]
+
+[observability]
+enabled = true
 
 # Stored reports + aggregate counters, and a per-IP scan rate limiter.
 # SQLite-backed Durable Objects -> eligible on the Workers Free plan.
